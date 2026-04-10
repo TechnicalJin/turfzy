@@ -1,0 +1,56 @@
+version: '3.8'
+
+services:
+  # MySQL 8 — exact same version as AWS RDS in production
+  mysql:
+    image: mysql:8.0
+    container_name: turfzy-mysql
+    environment:
+      MYSQL_ROOT_PASSWORD: root_password
+      MYSQL_DATABASE: turfzy_db
+      MYSQL_USER: turfzy_user
+      MYSQL_PASSWORD: turfzy_pass
+    ports:
+      - "3307:3306"
+    volumes:
+      - turfzy-mysql-data:/var/lib/mysql
+      - ./sql/init.sql:/docker-entrypoint-initdb.d/init.sql  # Seed schema on first start
+    healthcheck:
+      test: ["CMD", "mysqladmin", "ping", "-h", "localhost"]
+      timeout: 10s
+      retries: 5
+    networks:
+      - turfzy-network
+
+  # Redis 7 — for caching + distributed lock (Redisson)
+  redis:
+    image: redis:7-alpine
+    container_name: turfzy-redis
+    ports:
+      - "6379:6379"
+    command: redis-server --appendonly yes
+    volumes:
+      - turfzy-redis-data:/data
+    networks:
+      - turfzy-network
+
+  # Redis Commander — visual Redis UI (dev only)
+  redis-commander:
+    image: rediscommander/redis-commander:latest
+    container_name: turfzy-redis-ui
+    environment:
+      - REDIS_HOSTS=local:redis:6379
+    ports:
+      - "8081:8081"
+    depends_on:
+      - redis
+    networks:
+      - turfzy-network
+
+volumes:
+  turfzy-mysql-data:
+  turfzy-redis-data:
+
+networks:
+  turfzy-network:
+    driver: bridge

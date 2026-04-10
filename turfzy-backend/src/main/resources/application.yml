@@ -1,0 +1,35 @@
+# Base config — values here apply to ALL profiles unless overridden
+spring:
+  application:
+    name: turfzy-backend
+
+  # Profile is set by SPRING_PROFILES_ACTIVE env variable
+  # Locally: dev | Production: prod
+  profiles:
+    active: dev
+
+  # JPA base settings
+  jpa:
+    open-in-view: false       # IMPORTANT: prevents lazy loading issues in production
+    properties:
+      hibernate:
+        format_sql: true
+
+  # Disable security auto-config for now — we wire it on Day 3
+  autoconfigure:
+    exclude:
+      - org.springframework.boot.autoconfigure.security.servlet.SecurityAutoConfiguration
+
+server:
+  port: 8080
+  servlet:
+    context-path: /
+
+# Logging
+logging:
+  level:
+    com.turfzy: DEBUG
+    org.hibernate.SQL: DEBUG
+    org.hibernate.type.descriptor.sql: TRACE
+  pattern:
+    console: "%d{yyyy-MM-dd HH:mm:ss} [%thread] %-5level %logger{36} - %msg%n"
