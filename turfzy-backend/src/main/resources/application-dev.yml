@@ -16,6 +16,10 @@ spring:
     hibernate:
       ddl-auto: update    # Auto-updates schema in dev; NEVER use in prod
     show-sql: true
+    properties:
+      hibernate:
+        format_sql: true
+        dialect: org.hibernate.dialect.MySQL8Dialect
 
   data:
     redis:
