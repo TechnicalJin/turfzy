@@ -50,4 +50,45 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
     List<Booking> findBookingsBetweenDates(
         @Param("from") LocalDate from,
         @Param("to") LocalDate to);
+
+    /**
+     * Fetch booking with all associations eagerly loaded.
+     * Prevents LazyInitializationException when mapping to BookingDto.
+     */
+    @Query("""
+    SELECT b FROM Booking b
+    JOIN FETCH b.user
+    JOIN FETCH b.timeSlot s
+    JOIN FETCH s.turf t
+    WHERE b.id = :id
+    """)
+    Optional<Booking> findByIdWithDetails(@Param("id") Long id);
+
+    /**
+     * Fetch all bookings for a user with associations loaded.
+     */
+    @Query("""
+    SELECT b FROM Booking b
+    JOIN FETCH b.user
+    JOIN FETCH b.timeSlot s
+    JOIN FETCH s.turf
+    WHERE b.user.id = :userId
+    ORDER BY b.createdAt DESC
+    """)
+    Page<Booking> findByUserIdWithDetails(
+            @Param("userId") Long userId, Pageable pageable);
+
+    /**
+     * Owner dashboard — bookings for their turfs with all details.
+     */
+    @Query("""
+    SELECT b FROM Booking b
+    JOIN FETCH b.user
+    JOIN FETCH b.timeSlot s
+    JOIN FETCH s.turf t
+    WHERE t.owner.id = :ownerId
+    ORDER BY b.createdAt DESC
+    """)
+    Page<Booking> findByTurfOwnerIdWithDetails(
+            @Param("ownerId") Long ownerId, Pageable pageable);
 }

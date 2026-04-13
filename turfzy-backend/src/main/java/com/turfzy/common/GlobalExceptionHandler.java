@@ -65,4 +65,14 @@ public class GlobalExceptionHandler {
                 .status(HttpStatus.INTERNAL_SERVER_ERROR)
                 .body(ApiResponse.error("An internal error occurred. Please try again."));
     }
+
+    /** Redis slot lock contention */
+    @ExceptionHandler(RedisLockService.SlotLockException.class)
+    public ResponseEntity<ApiResponse<Void>> handleSlotLock(
+            RedisLockService.SlotLockException ex) {
+        log.warn("Slot lock contention: {}", ex.getMessage());
+        return ResponseEntity
+                .status(HttpStatus.CONFLICT)
+                .body(ApiResponse.error(ex.getMessage()));
+    }
 }

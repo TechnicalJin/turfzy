@@ -1,0 +1,86 @@
+Drop & create database
+
+docker exec -it turfzy-mysql mysql -u turfzy_user -pturfzy_pass turfzy_db -e "DROP DATABASE turfzy_db; CREATE DATABASE turfzy_db CHARACTER SET utf8mb4 COLLATE utf8mb4_unicode_ci;"
+
+
+Register OWNER :
+
+curl.exe -X POST http://localhost:8080/api/auth/register -H "Content-Type: application/json" -d "@register-owner.json"
+$OWNER_TOKEN = 'eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiUk9MRV9PV05FUiIsInVzZXJJZCI6Miwic3ViIjoib3duZXJAdGVzdC5jb20iLCJpYXQiOjE3NzYwODQ1NDAsImV4cCI6MTc3NjE3MDk0MH0.M7BSmp45q7OVoOTsm9D2qcwDdD-wLECDrKWuJ18Df3EARF97qyWA5Hr887UnmZdl'
+
+
+Login Admin :
+
+curl.exe -X POST http://localhost:8080/api/auth/login -H "Content-Type: application/json" -d "@login-admin.json"
+$ADMIN_TOKEN = 'eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiUk9MRV9BRE1JTiIsInVzZXJJZCI6MSwic3ViIjoiYWRtaW5AdHVyZnp5LmNvbSIsImlhdCI6MTc3NjA4NDU3OCwiZXhwIjoxNzc2MTcwOTc4fQ.AUTqHjcLfhoMB6k-Bc1meRWLLZxoYZEehCKpJFDCZmWQsHFZi2gB4hM0hXblv_wg'
+
+
+Register Customer :
+
+curl.exe -X POST http://localhost:8080/api/auth/register -H "Content-Type: application/json" -d "@register-customer.json"
+$CUSTOMER_TOKEN = 'eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiUk9MRV9DVVNUT01FUiIsInVzZXJJZCI6Mywic3ViIjoiY3VzdG9tZXJAdGVzdC5jb20iLCJpYXQiOjE3NzYwODQ2MTksImV4cCI6MTc3NjE3MTAxOX0.gw6KljdoAfdXXLbW7E8nRKsXREcSfYJlJpeo7oTgXmuxy0j7NU7P94ODwAA3Vsda'
+
+
+Create Turf :
+curl.exe -X POST http://localhost:8080/api/owner/turfs -H "Authorization: Bearer $OWNER_TOKEN" -H "Content-Type: application/json" -d "@create-turf.json"
+
+Approve Turf :
+curl.exe -X POST http://localhost:8080/api/admin/turfs/1/approve -H "Authorization: Bearer $ADMIN_TOKEN"
+
+Verify 480 slots :
+docker exec -it turfzy-mysql mysql -u turfzy_user -pturfzy_pass turfzy_db -e "SELECT COUNT(*) as total FROM time_slots WHERE turf_id=1;"
+
+Step 8 — Public search (the previously failing step):
+curl.exe "http://localhost:8080/api/turfs?city=Ahmedabad"
+# Expected: 200 OK with Green Arena Turf in content array
+
+curl.exe "http://localhost:8080/api/turfs?city=Ahmedabad&sport=CRICKET"
+# Expected: same turf filtered
+
+Step 9 — Turf detail:
+curl.exe "http://localhost:8080/api/turfs/1"
+# Expected: full detail WITH sportTypes: ["CRICKET","FOOTBALL"]
+
+Step 10 — Slot queries:
+curl.exe "http://localhost:8080/api/slots/1?date=2026-04-13"
+# Expected: 16 slots, all AVAILABLE
+
+curl.exe "http://localhost:8080/api/slots/1/available?date=2026-04-13"
+# Expected: 16 available slots
+
+curl.exe "http://localhost:8080/api/slots/1/week?startDate=2026-04-13"
+# Expected: 7 days map, 16 slots each
+
+
+Step 11 — Block slot:
+curl.exe -X POST http://localhost:8080/api/owner/slots/1/block -H "Authorization: Bearer $OWNER_TOKEN"
+# Expected: status=BLOCKED, available=false
+
+Step 12 — Verify blocked:
+curl.exe "http://localhost:8080/api/slots/1?date=2026-04-13"
+# Expected: slot id=1 BLOCKED, rest AVAILABLE
+
+Step 13 — Double-block error test:
+curl.exe -X POST http://localhost:8080/api/owner/slots/1/block -H "Authorization: Bearer $OWNER_TOKEN"
+# Expected: 400 "Slot is already blocked"
+
+Step 14 — Unblock:
+curl.exe -X POST http://localhost:8080/api/owner/slots/1/unblock -H "Authorization: Bearer $OWNER_TOKEN"
+# Expected: status=AVAILABLE
+
+Step 15 — Customer cannot block (403 test):
+curl.exe -X POST http://localhost:8080/api/owner/slots/1/block -H "Authorization: Bearer $CUSTOMER_TOKEN"
+# Expected: 403 Forbidden
+
+
+Step 16 — Idempotency:
+curl.exe -X POST http://localhost:8080/api/admin/turfs/1/generate-slots -H "Authorization: Bearer $ADMIN_TOKEN"
+docker exec -it turfzy-mysql mysql -u turfzy_user -pturfzy_pass turfzy_db -e "SELECT COUNT(*) FROM time_slots WHERE turf_id=1;"
+# Expected: still 480
+
+
+Step 17 — Owner views their turfs:
+curl.exe "http://localhost:8080/api/owner/turfs" -H "Authorization: Bearer $OWNER_TOKEN"
+# Expected: Green Arena Turf, status=ACTIVE
+
+
