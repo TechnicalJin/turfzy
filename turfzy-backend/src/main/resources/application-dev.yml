@@ -12,6 +12,18 @@ spring:
       idle-timeout: 600000
       pool-name: TurfzyHikariPool
 
+
+  security:
+    oauth2:
+      client:
+        registration:
+          google:
+            client-id: YOUR_GOOGLE_CLIENT_ID       # Get from Google Cloud Console
+            client-secret: YOUR_GOOGLE_CLIENT_SECRET
+            scope:
+              - email
+              - profile
+            redirect-uri: "{baseUrl}/login/oauth2/code/{registrationId}"
   jpa:
     hibernate:
       ddl-auto: update    # Auto-updates schema in dev; NEVER use in prod

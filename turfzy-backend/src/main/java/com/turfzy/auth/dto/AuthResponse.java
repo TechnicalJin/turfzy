@@ -1,0 +1,24 @@
+package com.turfzy.auth.dto;
+
+import lombok.AllArgsConstructor;
+import lombok.Builder;
+import lombok.Data;
+import lombok.NoArgsConstructor;
+
+@Data
+@Builder
+@NoArgsConstructor
+@AllArgsConstructor
+public class AuthResponse {
+
+    private String accessToken;
+    private String tokenType = "Bearer";
+    private long expiresIn;        // milliseconds
+
+    // User info — frontend needs this to render the nav/dashboard
+    private Long userId;
+    private String name;
+    private String email;
+    private String role;           // Primary role (CUSTOMER / OWNER / ADMIN)
+    private String profilePicture;
+}
