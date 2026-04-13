@@ -1,5 +1,6 @@
 package com.turfzy.turf;
 
+import com.turfzy.booking.SlotGenerationService;
 import com.turfzy.common.CloudinaryService;
 import com.turfzy.turf.dto.*;
 import com.turfzy.user.User;
@@ -17,6 +18,7 @@ import org.springframework.transaction.annotation.Transactional;
 import org.springframework.web.multipart.MultipartFile;
 import org.springframework.web.server.ResponseStatusException;
 
+import java.time.LocalTime;
 import java.util.List;
 import java.util.Map;
 import java.util.stream.Collectors;
@@ -31,12 +33,17 @@ public class TurfService {
     private final UserRepository userRepository;
     private final CloudinaryService cloudinaryService;
 
+    private final SlotGenerationService slotGenerationService;
+
+
     public TurfService(TurfRepository turfRepository,
                        UserRepository userRepository,
-                       CloudinaryService cloudinaryService) {
+                       CloudinaryService cloudinaryService,
+                       SlotGenerationService slotGenerationService) {
         this.turfRepository = turfRepository;
         this.userRepository = userRepository;
         this.cloudinaryService = cloudinaryService;
+        this.slotGenerationService = slotGenerationService;
     }
 
     // ─── PUBLIC ENDPOINTS ───────────────────────────────────────────────
@@ -87,6 +94,10 @@ public class TurfService {
             .longitude(request.getLongitude())
             .sportTypes(request.getSportTypes())
             .status(TurfStatus.PENDING_APPROVAL)
+                .openingTime(request.getOpeningTime() != null
+                        ? request.getOpeningTime() : LocalTime.of(6, 0))
+                .closingTime(request.getClosingTime() != null
+                        ? request.getClosingTime() : LocalTime.of(22, 0))
             .owner(owner)
             .build();
 
@@ -117,6 +128,8 @@ public class TurfService {
         if (request.getSportTypes() != null)   turf.setSportTypes(request.getSportTypes());
         if (request.getLatitude() != null)     turf.setLatitude(request.getLatitude());
         if (request.getLongitude() != null)    turf.setLongitude(request.getLongitude());
+        if (request.getOpeningTime() != null) turf.setOpeningTime(request.getOpeningTime());
+        if (request.getClosingTime() != null) turf.setClosingTime(request.getClosingTime());
 
         log.info("Turf updated: id={} by ownerId={}", turfId, ownerId);
         return toDetailDto(turfRepository.save(turf));
@@ -228,12 +241,17 @@ public class TurfService {
 
         if (turf.getStatus() != TurfStatus.PENDING_APPROVAL) {
             throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
-                "Turf is not in PENDING_APPROVAL status");
+                    "Turf is not in PENDING_APPROVAL status");
         }
 
         turf.setStatus(TurfStatus.ACTIVE);
+        Turf saved = turfRepository.save(turf);
         log.info("Admin approved turf: id={}", turfId);
-        return toDetailDto(turfRepository.save(turf));
+
+        // Generate 30 days of slots immediately — turf is live right now
+        slotGenerationService.generateSlotsForNewlyApprovedTurf(saved.getId());
+
+        return toDetailDto(saved);
     }
 
     /** Admin rejects a pending turf */
@@ -259,10 +277,26 @@ public class TurfService {
 
     // ─── HELPERS ─────────────────────────────────────────────────────────
 
+    /**
+     * Loads a Turf with ALL collections initialized — owner, sportTypes, images.
+     *
+     * WHY TWO QUERIES?
+     * Hibernate throws MultipleBagFetchException if you JOIN FETCH two List
+     * collections (bags) in a single query. The solution is two separate queries:
+     * - Query 1: turf + owner + sportTypes
+     * - Query 2: turf + images (Hibernate merges into the same entity instance)
+     * Both run within the same transaction so no LazyInitializationException.
+     */
     private Turf findTurfOrThrow(Long turfId) {
-        return turfRepository.findById(turfId)
-            .orElseThrow(() -> new ResponseStatusException(
-                HttpStatus.NOT_FOUND, "Turf not found with id: " + turfId));
+        // Query 1 — loads owner + sportTypes
+        Turf turf = turfRepository.findByIdWithSportTypesAndOwner(turfId)
+                .orElseThrow(() -> new ResponseStatusException(
+                        HttpStatus.NOT_FOUND, "Turf not found with id: " + turfId));
+
+        // Query 2 — loads images into the same entity instance
+        turfRepository.findByIdWithImages(turfId);
+
+        return turf;
     }
 
     /**
@@ -281,26 +315,32 @@ public class TurfService {
     // ─── DTO MAPPERS ─────────────────────────────────────────────────────
 
     private TurfSummaryDto toSummaryDto(Turf turf) {
-        String primaryImage = turf.getImages().stream()
-            .filter(TurfImage::isPrimary)
-            .map(TurfImage::getImageUrl)
-            .findFirst()
-            .orElse(turf.getImages().isEmpty() ? null
-                : turf.getImages().get(0).getImageUrl());
+        // Get primary image URL safely — no lazy load needed (images loaded separately)
+        String primaryImage = null;
+        try {
+            primaryImage = turf.getImages().stream()
+                    .filter(TurfImage::isPrimary)
+                    .map(TurfImage::getImageUrl)
+                    .findFirst()
+                    .orElse(turf.getImages().isEmpty() ? null
+                            : turf.getImages().get(0).getImageUrl());
+        } catch (Exception e) {
+            // images not loaded in this context — safe to ignore for listing
+            log.debug("Images not loaded for turfId={} in summary", turf.getId());
+        }
 
         return TurfSummaryDto.builder()
-            .id(turf.getId())
-            .name(turf.getName())
-            .city(turf.getCity())
-            .state(turf.getState())
-            .pricePerHour(turf.getPricePerHour())
-            .averageRating(turf.getAverageRating())
-            .totalReviews(turf.getTotalReviews())
-            .status(turf.getStatus())
-            .sportTypes(turf.getSportTypes())
-            .primaryImageUrl(primaryImage)
-            .ownerName(turf.getOwner().getName())
-            .build();
+                .id(turf.getId())
+                .name(turf.getName())
+                .city(turf.getCity())
+                .state(turf.getState())
+                .pricePerHour(turf.getPricePerHour())
+                .averageRating(turf.getAverageRating())
+                .totalReviews(turf.getTotalReviews())
+                .status(turf.getStatus())
+                .primaryImageUrl(primaryImage)
+                .ownerName(turf.getOwner() != null ? turf.getOwner().getName() : null)
+                .build();
     }
 
     private TurfDetailDto toDetailDto(Turf turf) {
@@ -334,5 +374,21 @@ public class TurfService {
             .ownerName(turf.getOwner().getName())
             .createdAt(turf.getCreatedAt())
             .build();
+    }
+
+    /**
+     * Dev/test helper — manually trigger slot generation for a specific turf.
+     * Also useful after opening hours are updated.
+     */
+    @Transactional
+    @PreAuthorize("hasRole('ADMIN')")
+    public String triggerSlotGeneration(Long turfId) {
+        Turf turf = findTurfOrThrow(turfId);
+        if (turf.getStatus() != TurfStatus.ACTIVE) {
+            throw new ResponseStatusException(HttpStatus.BAD_REQUEST,
+                    "Turf must be ACTIVE to generate slots");
+        }
+        slotGenerationService.generateSlotsForNewlyApprovedTurf(turfId);
+        return "Slot generation triggered for: " + turf.getName();
     }
 }

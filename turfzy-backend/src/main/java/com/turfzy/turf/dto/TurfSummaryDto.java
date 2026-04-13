@@ -1,17 +1,19 @@
-// src/main/java/com/turfzy/turf/dto/TurfSummaryDto.java
 package com.turfzy.turf.dto;
 
-import com.turfzy.turf.SportType;
 import com.turfzy.turf.TurfStatus;
 import lombok.Builder;
 import lombok.Data;
 
 import java.math.BigDecimal;
-import java.util.List;
 
 /**
- * Lightweight DTO for listing pages — only fields needed for turf cards.
- * Avoids loading full entity graph (images, owner) for every item in a list.
+ * Lightweight DTO for turf listing cards.
+ *
+ * Intentionally excludes sportTypes — fetching a collection for every
+ * turf in a paginated list causes N+1 queries or LazyInitializationException.
+ * SportTypes are included in TurfDetailDto (single turf view).
+ *
+ * Frontend turf cards only need: name, city, price, rating, image, status.
  */
 @Data
 @Builder
@@ -24,7 +26,6 @@ public class TurfSummaryDto {
     private BigDecimal averageRating;
     private Integer totalReviews;
     private TurfStatus status;
-    private List<SportType> sportTypes;
-    private String primaryImageUrl;   // First image only for card thumbnail
+    private String primaryImageUrl;
     private String ownerName;
 }

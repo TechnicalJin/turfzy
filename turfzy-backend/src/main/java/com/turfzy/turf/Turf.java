@@ -9,6 +9,8 @@ import java.math.BigDecimal;
 import java.util.ArrayList;
 import java.util.List;
 
+import java.time.LocalTime;
+
 /**
  * Turf entity — the core listing object.
  *
@@ -99,4 +101,12 @@ public class Turf extends BaseEntity {
     @OneToMany(mappedBy = "turf", cascade = CascadeType.ALL, orphanRemoval = true)
     @Builder.Default
     private List<TurfImage> images = new ArrayList<>();
+
+    @Column(name = "opening_time", nullable = false)
+    @Builder.Default
+    private LocalTime openingTime = LocalTime.of(6, 0);   // Default: 6:00 AM
+
+    @Column(name = "closing_time", nullable = false)
+    @Builder.Default
+    private LocalTime closingTime = LocalTime.of(22, 0);  // Default: 10:00 PM
 }

@@ -170,4 +170,10 @@ public class TurfController {
                 HttpStatus.UNAUTHORIZED, "User not found"))
             .getId();
     }
+
+    @PostMapping("/api/admin/turfs/{id}/generate-slots")
+    public ResponseEntity<ApiResponse<String>> triggerSlotGen(@PathVariable Long id) {
+        return ResponseEntity.ok(ApiResponse.success(
+                "Done", turfService.triggerSlotGeneration(id)));
+    }
 }

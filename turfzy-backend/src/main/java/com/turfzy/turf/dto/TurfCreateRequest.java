@@ -6,6 +6,7 @@ import jakarta.validation.constraints.*;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.time.LocalTime;
 import java.util.List;
 
 @Data
@@ -44,4 +45,7 @@ public class TurfCreateRequest {
     // Coordinates — optional for MVP, required for map feature
     private BigDecimal latitude;
     private BigDecimal longitude;
+
+    private LocalTime openingTime = LocalTime.of(6, 0);   // Optional — defaults to 6 AM
+    private LocalTime closingTime = LocalTime.of(22, 0);  // Optional — defaults to 10 PM
 }

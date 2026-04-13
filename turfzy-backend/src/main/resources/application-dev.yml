@@ -6,6 +6,13 @@ spring:
       max-file-size: 5MB
       max-request-size: 40MB   # Up to 8 files × 5MB
 
+  # Scheduling config
+  task:
+    scheduling:
+      pool:
+        size: 2        # 2 threads for scheduled tasks
+      thread-name-prefix: "turfzy-scheduler-"
+
   datasource:
     url: jdbc:mysql://localhost:3307/turfzy_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Kolkata
     username: turfzy_user
@@ -36,7 +43,7 @@ spring:
     show-sql: false
     properties:
       hibernate:
-        format_sql: true
+        format_sql: false
         dialect: org.hibernate.dialect.MySQL8Dialect
 
   data:

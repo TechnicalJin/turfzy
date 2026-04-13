@@ -6,6 +6,7 @@ import jakarta.validation.constraints.*;
 import lombok.Data;
 
 import java.math.BigDecimal;
+import java.time.LocalTime;
 import java.util.List;
 
 /**
@@ -37,4 +38,7 @@ public class TurfUpdateRequest {
     private List<SportType> sportTypes;
     private BigDecimal latitude;
     private BigDecimal longitude;
+
+    private LocalTime openingTime;
+    private LocalTime closingTime;
 }

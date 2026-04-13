@@ -45,4 +45,17 @@ public interface TimeSlotRepository extends JpaRepository<TimeSlot, Long> {
         AND s.status = 'AVAILABLE'
         """)
     long countUpcomingAvailableSlots(@Param("turfId") Long turfId);
+
+    /**
+     * Fetches slot with turf AND turf.owner eagerly in one query.
+     * Used for block/unblock ownership checks — avoids LazyInitializationException
+     * when accessing slot.getTurf().getOwner() outside a transaction.
+     */
+    @Query("""
+    SELECT ts FROM TimeSlot ts
+    JOIN FETCH ts.turf t
+    JOIN FETCH t.owner
+    WHERE ts.id = :slotId
+    """)
+    Optional<TimeSlot> findByIdWithTurfAndOwner(@Param("slotId") Long slotId);
 }
