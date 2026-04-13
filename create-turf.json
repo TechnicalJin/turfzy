@@ -1,0 +1,11 @@
+{
+  "name": "Green Arena Turf",
+  "description": "Best cricket turf in Ahmedabad",
+  "address": "123 Sports Complex, SG Highway",
+  "city": "Ahmedabad",
+  "state": "Gujarat",
+  "pincode": "380054",
+  "pricePerHour": 800,
+  "phone": "9988776655",
+  "sportTypes": ["CRICKET", "FOOTBALL"]
+}

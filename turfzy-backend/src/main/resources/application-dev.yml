@@ -1,5 +1,11 @@
 # Dev profile — local MySQL + Redis from Docker Compose
 spring:
+
+  servlet:
+    multipart:
+      max-file-size: 5MB
+      max-request-size: 40MB   # Up to 8 files × 5MB
+
   datasource:
     url: jdbc:mysql://localhost:3307/turfzy_db?useSSL=false&allowPublicKeyRetrieval=true&serverTimezone=Asia/Kolkata
     username: turfzy_user
@@ -18,8 +24,8 @@ spring:
       client:
         registration:
           google:
-            client-id: YOUR_GOOGLE_CLIENT_ID       # Get from Google Cloud Console
-            client-secret: YOUR_GOOGLE_CLIENT_SECRET
+            client-id: 507238275770-2j7lurulg01uo6092i6jp153h7iicpo8.apps.googleusercontent.com       # Get from Google Cloud Console
+            client-secret: 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
             scope:
               - email
               - profile
@@ -27,7 +33,7 @@ spring:
   jpa:
     hibernate:
       ddl-auto: update    # Auto-updates schema in dev; NEVER use in prod
-    show-sql: true
+    show-sql: false
     properties:
       hibernate:
         format_sql: true
@@ -48,3 +54,10 @@ app:
 
   cors:
     allowed-origins: "http://localhost:5173,http://localhost:3000"
+
+# Cloudinary — get free credentials from cloudinary.com
+cloudinary:
+  cloud-URL: cloudinary://327473315774365:F4Of5d9QALaFygALZmHmmEAZ__I@dxacqmgpz
+  cloud-name: dxacqmgpz
+  api-key: 327473315774365
+  api-secret: F4Of5d9QALaFygALZmHmmEAZ__I

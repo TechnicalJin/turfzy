@@ -1,12 +1,11 @@
 package com.turfzy.auth;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import com.turfzy.auth.dto.AuthResponse;
-import com.turfzy.common.ApiResponse;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
+import org.springframework.context.annotation.Lazy;
 import org.springframework.security.core.Authentication;
 import org.springframework.security.oauth2.core.user.OAuth2User;
 import org.springframework.security.web.authentication.SimpleUrlAuthenticationSuccessHandler;
@@ -14,16 +13,6 @@ import org.springframework.stereotype.Component;
 
 import java.io.IOException;
 
-/**
- * Called by Spring Security after successful Google OAuth2 login.
- *
- * Instead of redirecting to a success URL (default behavior),
- * we issue our own JWT and redirect to the frontend with the token
- * as a query parameter, which the React app stores in localStorage.
- *
- * Production alternative: use HttpOnly cookie for the token — but
- * for this MVP, query param → localStorage is simpler for SPA integration.
- */
 @Component
 public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler {
 
@@ -31,7 +20,9 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
 
     private final AuthService authService;
 
-    public OAuth2SuccessHandler(AuthService authService) {
+    // @Lazy breaks the cycle — Spring injects a proxy at startup,
+    // resolves the real AuthService bean only on first actual method call.
+    public OAuth2SuccessHandler(@Lazy AuthService authService) {
         this.authService = authService;
     }
 
@@ -49,14 +40,13 @@ public class OAuth2SuccessHandler extends SimpleUrlAuthenticationSuccessHandler 
         log.info("OAuth2 success for email: {}", email);
 
         AuthResponse authResponse = authService.processOAuth2Login(
-            email, name, googleId, pictureUrl);
+                email, name, googleId, pictureUrl);
 
-        // Redirect to frontend with token — React app picks this up on /oauth2/callback
         String redirectUrl = "http://localhost:5173/oauth2/callback?token="
-            + authResponse.getAccessToken()
-            + "&userId=" + authResponse.getUserId()
-            + "&name=" + authResponse.getName()
-            + "&role=" + authResponse.getRole();
+                + authResponse.getAccessToken()
+                + "&userId=" + authResponse.getUserId()
+                + "&name=" + authResponse.getName()
+                + "&role=" + authResponse.getRole();
 
         getRedirectStrategy().sendRedirect(request, response, redirectUrl);
     }
