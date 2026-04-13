@@ -14,16 +14,6 @@ import java.util.Date;
 import java.util.HashMap;
 import java.util.Map;
 
-/**
- * JWT utility — handles token generation, parsing, and validation.
- *
- * Uses jjwt 0.12.x fluent API (NOT the deprecated 0.9.x style).
- * Algorithm: HS256 with a 256-bit minimum key derived from app.jwt.secret.
- *
- * Two token types:
- * - Access token:  short-lived (24h), sent in Authorization header
- * - Refresh token: long-lived (7d), sent in HttpOnly cookie
- */
 @Component
 public class JwtUtils {
 

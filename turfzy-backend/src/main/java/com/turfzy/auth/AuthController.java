@@ -11,10 +11,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
 
-/**
- * Auth REST endpoints.
- * No business logic here — pure HTTP in/out, delegates to AuthService.
- */
 @RestController
 @RequestMapping("/api/auth")
 public class AuthController {

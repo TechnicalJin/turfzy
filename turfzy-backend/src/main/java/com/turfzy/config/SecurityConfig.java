@@ -25,15 +25,7 @@ import org.springframework.web.cors.UrlBasedCorsConfigurationSource;
 
 import java.util.List;
 
-/**
- * Central Spring Security configuration.
- *
- * Key decisions:
- * - STATELESS session — no server-side session, JWT carries state
- * - CSRF disabled — safe for stateless REST APIs (CSRF attacks need cookies/sessions)
- * - CORS configured here (overrides AppConfig.corsConfigurer for secured routes)
- * - @EnableMethodSecurity — enables @PreAuthorize at service/controller level (Day 4+)
- */
+
 @Configuration
 @EnableWebSecurity
 @EnableMethodSecurity(prePostEnabled = true)

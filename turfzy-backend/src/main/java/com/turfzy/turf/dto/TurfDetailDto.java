@@ -1,4 +1,3 @@
-// src/main/java/com/turfzy/turf/dto/TurfDetailDto.java
 package com.turfzy.turf.dto;
 
 import com.turfzy.turf.SportType;

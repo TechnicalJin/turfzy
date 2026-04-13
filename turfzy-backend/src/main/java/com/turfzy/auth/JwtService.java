@@ -14,14 +14,6 @@ import java.util.Date;
 import java.util.Map;
 import java.util.function.Function;
 
-/**
- * Handles all JWT operations: generate, validate, extract claims.
- *
- * Uses jjwt 0.12.x fluent API.
- * Algorithm: HS256 (HMAC-SHA256) — symmetric, sufficient for monolith.
- * For microservices, RS256 (asymmetric) would be preferred so each service
- * can verify without sharing the secret — a common interview follow-up.
- */
 @Service
 public class JwtService {
 

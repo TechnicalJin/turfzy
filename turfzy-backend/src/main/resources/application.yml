@@ -1,4 +1,3 @@
-# Base config — values here apply to ALL profiles unless overridden
 spring:
   application:
     name: turfzy-backend

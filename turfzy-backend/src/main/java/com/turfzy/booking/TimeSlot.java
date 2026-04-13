@@ -10,20 +10,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
-/**
- * TimeSlot — represents a 1-hour bookable window for a turf on a specific date.
- *
- * CRITICAL: The UNIQUE constraint on (turf_id, slot_date, start_time) is
- * Layer 1 of our 3-layer race condition prevention strategy.
- *
- * If two users try to book the same slot simultaneously and both pass
- * application-level checks, only one INSERT will succeed at the DB level.
- * The second will throw a DataIntegrityViolationException which we catch
- * and convert to a "Slot already booked" error.
- *
- * Slot generation: Slots are auto-generated for the next 30 days
- * by a @Scheduled job (Day 5) based on turf opening/closing hours.
- */
 @Entity
 @Table(
     name = "time_slots",

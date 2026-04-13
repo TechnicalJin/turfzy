@@ -8,11 +8,6 @@ import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.LocalTime;
 
-/**
- * Slot DTO returned to clients.
- * Never expose the raw TimeSlot entity — it contains the Turf reference
- * which would trigger lazy loading and potentially leak internal data.
- */
 @Data
 @Builder
 public class SlotDto {

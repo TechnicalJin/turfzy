@@ -15,7 +15,7 @@ public class AuthResponse {
     private String tokenType = "Bearer";
     private long expiresIn;        // milliseconds
 
-    // User info — frontend needs this to render the nav/dashboard
+
     private Long userId;
     private String name;
     private String email;

@@ -16,22 +16,6 @@ import org.springframework.web.filter.OncePerRequestFilter;
 
 import java.io.IOException;
 
-/**
- * JWT Authentication Filter — runs before every HTTP request.
- *
- * Flow:
- * 1. Extract "Authorization: Bearer <token>" header
- * 2. Validate token with JwtService
- * 3. Load UserDetails from DB
- * 4. Set authentication in SecurityContext
- *
- * If any step fails, we don't throw — we simply don't set authentication.
- * Spring Security will then reject the request with 401 at the authorization check.
- *
- * Why OncePerRequestFilter?
- * Servlet filters can be invoked multiple times in forward/include chains.
- * OncePerRequestFilter guarantees exactly one execution per request.
- */
 @Component
 public class JwtAuthFilter extends OncePerRequestFilter {
 

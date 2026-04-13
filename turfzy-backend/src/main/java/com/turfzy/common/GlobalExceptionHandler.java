@@ -1,4 +1,3 @@
-// src/main/java/com/turfzy/common/GlobalExceptionHandler.java
 package com.turfzy.common;
 
 import org.slf4j.Logger;

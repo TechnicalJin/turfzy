@@ -1,4 +1,3 @@
-# Dev profile — local MySQL + Redis from Docker Compose
 spring:
 
   servlet:

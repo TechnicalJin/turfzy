@@ -8,17 +8,6 @@ import lombok.*;
 import java.math.BigDecimal;
 import java.time.LocalDateTime;
 
-/**
- * Booking — created when a user initiates payment for a slot.
- *
- * Lifecycle:
- * PENDING → (payment success) → CONFIRMED
- * PENDING → (payment failed/timeout) → CANCELLED
- * CONFIRMED → (user cancels, within window) → CANCELLED → REFUNDED
- *
- * `totalAmount` is snapshotted at booking time —
- * owner changing price later doesn't affect existing bookings.
- */
 @Entity
 @Table(
     name = "bookings",

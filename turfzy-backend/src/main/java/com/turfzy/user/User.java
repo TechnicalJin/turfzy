@@ -1,4 +1,3 @@
-// src/main/java/com/turfzy/user/User.java
 package com.turfzy.user;
 
 import com.turfzy.common.BaseEntity;
