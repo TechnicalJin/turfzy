@@ -6,7 +6,7 @@ docker exec -it turfzy-mysql mysql -u turfzy_user -pturfzy_pass turfzy_db -e "DR
 Register OWNER :
 
 curl.exe -X POST http://localhost:8080/api/auth/register -H "Content-Type: application/json" -d "@register-owner.json"
-$OWNER_TOKEN = 'eyJhbGciOiJIUzM4NCJ9.eyJyb2xlIjoiUk9MRV9PV05FUiIsInVzZXJJZCI6Miwic3ViIjoib3duZXJAdGVzdC5jb20iLCJpYXQiOjE3NzYwODQ1NDAsImV4cCI6MTc3NjE3MDk0MH0.M7BSmp45q7OVoOTsm9D2qcwDdD-wLECDrKWuJ18Df3EARF97qyWA5Hr887UnmZdl'
+$OWNER_TOKEN = 'eyJhbGciOiJIUzM4NCJ9.eyJ1c2VySWQiOjIsInJvbGUiOiJST0xFX09XTkVSIiwic3ViIjoib3duZXJAdGVzdC5jb20iLCJpYXQiOjE3NzYxNTM1NDUsImV4cCI6MTc3NjIzOTk0NX0.XrC-XzULkjEw2Zr7hfb747h0uDsrX8oTHhpztdrk7nJM9mxeQc70GGzu1jmaPAwr'
 
 
 Login Admin :

@@ -7,30 +7,55 @@ import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
-import java.time.LocalDate;
-import java.util.List;
 import java.util.Optional;
 
 @Repository
 public interface BookingRepository extends JpaRepository<Booking, Long> {
 
-    Page<Booking> findByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
-
-    Optional<Booking> findByBookingReference(String bookingReference);
-
-    Optional<Booking> findByTimeSlotId(Long slotId);
-
-    /** Owner dashboard — bookings for their turfs */
+    /**
+     * Reference lookup with full JOIN FETCH — avoids LazyInitializationException
+     * when toBookingDto() accesses slot.getTurf() outside a transaction.
+     */
     @Query("""
         SELECT b FROM Booking b
-        JOIN b.timeSlot s
-        JOIN s.turf t
+        JOIN FETCH b.user
+        JOIN FETCH b.timeSlot s
+        JOIN FETCH s.turf
+        WHERE b.bookingReference = :reference
+        """)
+    Optional<Booking> findByBookingReference(@Param("reference") String reference);
+
+    @Query("""
+        SELECT b FROM Booking b
+        JOIN FETCH b.user
+        JOIN FETCH b.timeSlot s
+        JOIN FETCH s.turf
+        WHERE b.id = :id
+        """)
+    Optional<Booking> findByIdWithDetails(@Param("id") Long id);
+
+    @Query("""
+        SELECT b FROM Booking b
+        JOIN FETCH b.user
+        JOIN FETCH b.timeSlot s
+        JOIN FETCH s.turf
+        WHERE b.user.id = :userId
+        ORDER BY b.createdAt DESC
+        """)
+    Page<Booking> findByUserIdWithDetails(
+            @Param("userId") Long userId, Pageable pageable);
+
+    @Query("""
+        SELECT b FROM Booking b
+        JOIN FETCH b.user
+        JOIN FETCH b.timeSlot s
+        JOIN FETCH s.turf t
         WHERE t.owner.id = :ownerId
         ORDER BY b.createdAt DESC
         """)
-    Page<Booking> findByTurfOwnerId(@Param("ownerId") Long ownerId, Pageable pageable);
+    Page<Booking> findByTurfOwnerIdWithDetails(
+            @Param("ownerId") Long ownerId, Pageable pageable);
 
-    /** Revenue for an owner (CONFIRMED + REFUNDED bookings excluded from revenue) */
     @Query("""
         SELECT COALESCE(SUM(b.totalAmount), 0) FROM Booking b
         JOIN b.timeSlot s
@@ -40,55 +65,5 @@ public interface BookingRepository extends JpaRepository<Booking, Long> {
         """)
     java.math.BigDecimal getTotalRevenueByOwner(@Param("ownerId") Long ownerId);
 
-    /** Admin dashboard — bookings in a date range */
-    @Query("""
-        SELECT b FROM Booking b
-        JOIN b.timeSlot s
-        WHERE s.slotDate BETWEEN :from AND :to
-        ORDER BY b.createdAt DESC
-        """)
-    List<Booking> findBookingsBetweenDates(
-        @Param("from") LocalDate from,
-        @Param("to") LocalDate to);
-
-    /**
-     * Fetch booking with all associations eagerly loaded.
-     * Prevents LazyInitializationException when mapping to BookingDto.
-     */
-    @Query("""
-    SELECT b FROM Booking b
-    JOIN FETCH b.user
-    JOIN FETCH b.timeSlot s
-    JOIN FETCH s.turf t
-    WHERE b.id = :id
-    """)
-    Optional<Booking> findByIdWithDetails(@Param("id") Long id);
-
-    /**
-     * Fetch all bookings for a user with associations loaded.
-     */
-    @Query("""
-    SELECT b FROM Booking b
-    JOIN FETCH b.user
-    JOIN FETCH b.timeSlot s
-    JOIN FETCH s.turf
-    WHERE b.user.id = :userId
-    ORDER BY b.createdAt DESC
-    """)
-    Page<Booking> findByUserIdWithDetails(
-            @Param("userId") Long userId, Pageable pageable);
-
-    /**
-     * Owner dashboard — bookings for their turfs with all details.
-     */
-    @Query("""
-    SELECT b FROM Booking b
-    JOIN FETCH b.user
-    JOIN FETCH b.timeSlot s
-    JOIN FETCH s.turf t
-    WHERE t.owner.id = :ownerId
-    ORDER BY b.createdAt DESC
-    """)
-    Page<Booking> findByTurfOwnerIdWithDetails(
-            @Param("ownerId") Long ownerId, Pageable pageable);
+    Page<Booking> findByUserIdOrderByCreatedAtDesc(Long userId, Pageable pageable);
 }
